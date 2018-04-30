@@ -123,8 +123,11 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
     }
 
     private void resetRecognizer() {
-        speech.cancel();
-        speech.destroy();
+        if (null != speech)
+        {
+            speech.cancel();
+            speech.destroy();
+        }
         speech = SpeechRecognizer.createSpeechRecognizer(this);
         if (null != speech)
         {
@@ -159,7 +162,14 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         switch (requestCode) {
             case REQUEST_RECORD_PERMISSION:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    speech.startListening(recognizerIntent);
+                    if (null == speech)
+                    {
+                        resetRecognizer();
+                    }
+                    else
+                    {
+                        speech.startListening(recognizerIntent);
+                    }
                 } else {
                     Toast.makeText(VoiceRecognitionActivity.this, "Permission Denied!", Toast
                             .LENGTH_SHORT).show();
