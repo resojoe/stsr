@@ -1,6 +1,7 @@
 package com.seetalk.seetalkrecognizer;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -173,12 +174,24 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
 
         private void showHelp()
         {
-
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Help")
+                    .setMessage("Clear empties the display buffer\n Reset restarts speech recognition")
+                    .setNeutralButton("OK", null)
+                    .setCancelable(false)
+                    .create()
+                    .show();
         }
 
         private void showAbout()
         {
-
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("About")
+                   .setMessage("SeeTalk Speech Recognizer\n See Talk LLC\n Coeur d'Alene, ID")
+                   .setNeutralButton("OK", null)
+                   .setCancelable(false)
+                   .create()
+                   .show();
         }
 
         @Override
