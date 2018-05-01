@@ -1,6 +1,7 @@
 package com.seetalk.seetalkrecognizer;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.media.AudioManager;
@@ -13,6 +14,10 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.util.TypedValue;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.MenuInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -22,6 +27,7 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 public class VoiceRecognitionActivity extends AppCompatActivity implements
         RecognitionListener {
@@ -29,7 +35,8 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
     private static final int REQUEST_RECORD_PERMISSION = 100;
     private TextView returnedText;
     private ToggleButton toggleButton;
-    private Button button;
+    private Button clrButton;
+    private Button rstButton;
     private ProgressBar progressBar;
     private SpeechRecognizer speech = null;
     private Intent recognizerIntent;
@@ -47,7 +54,8 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         returnedText.setText("*** SeeTalk Begins ***\n");
         retTextPos = returnedText.length();
         progressBar = (ProgressBar) findViewById(R.id.progressBar1);
-        button = (Button) findViewById(R.id.clearButton);
+        clrButton = (Button) findViewById(R.id.clearButton);
+        rstButton = (Button) findViewById(R.id.resetButton);
         //toggleButton = (ToggleButton) findViewById(R.id.toggleButton1);
 
 
@@ -70,11 +78,18 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
                 (VoiceRecognitionActivity.this,
                         new String[]{Manifest.permission.RECORD_AUDIO},
                         REQUEST_RECORD_PERMISSION);
-        button.setOnClickListener(new View.OnClickListener() {
+        clrButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-
                 returnedText.setText("==> buffer cleared <==\n");
                 retTextPos = returnedText.length();
+            }
+
+        });
+        rstButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                returnedText.append("==> reset speech <==\n");
+                retTextPos = returnedText.length();
+                resetRecognizer();
             }
 
         });
@@ -108,16 +123,107 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
 */
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.stsr_menu, menu);
+        return true;
+    }
+
+    private void changeLanguage(int lang)
+    {
+        String langPref;
+        switch( lang )
+        {
+            case 0: // locale
+                langPref = Locale.getDefault().toString();
+                break;
+            case 1: // English
+                langPref = "en";
+                break;
+            case 2: // French
+                langPref = "fr";
+                break;
+            case 3: // Spanish
+                langPref = "sp";
+                break;
+            default:
+                langPref = "en";
+                break;
+        }
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, langPref);
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, langPref);
+    }
+
+        private void changeTextSize(boolean up)
+        {
+            float size = (float)returnedText.getTextSize();
+            float incr = size * (float)0.05; // change by 5%
+
+            if ( true == up )
+            {
+                size += incr;
+            }
+            else
+            {
+                size -= incr;
+            }
+            returnedText.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
+        }
+
+        private void showHelp()
+        {
+
+        }
+
+        private void showAbout()
+        {
+
+        }
+
+        @Override
+        public boolean onOptionsItemSelected(MenuItem selItem) {
+        // Handle item selection
+        switch (selItem.getItemId()) {
+            case R.id.local:
+                changeLanguage(0);
+                return true;
+            case R.id.english:
+                changeLanguage(1);
+                return true;
+            case R.id.french:
+                changeLanguage(2);
+                return true;
+            case R.id.spanish:
+                changeLanguage(3);
+                return true;
+            case R.id.textlarger:
+                changeTextSize(true);
+                return true;
+            case R.id.textsmaller:
+                changeTextSize(false);
+                return true;
+            case R.id.help:
+                showHelp();
+                return true;
+            case R.id.about:
+                showAbout();
+                return true;
+            default:
+                return super.onOptionsItemSelected(selItem);
+        }
+    }
+
     private void mute() {
         //mute audio
-        AudioManager amanager = (AudioManager) getSystemService(android.content.Context.AUDIO_SERVICE);
+        AudioManager amanager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         amanager.setStreamMute(AudioManager.STREAM_NOTIFICATION, true);
         amanager.setStreamMute(AudioManager.STREAM_MUSIC, true);
     }
 
     private void unmute() {
         //unmute audio
-        AudioManager amanager = (AudioManager) getSystemService(android.content.Context.AUDIO_SERVICE);
+        AudioManager amanager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         amanager.setStreamMute(AudioManager.STREAM_NOTIFICATION, false);
         amanager.setStreamMute(AudioManager.STREAM_MUSIC, false);
     }

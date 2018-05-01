@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/lang"
+        android:title="@string/lang" >
+        <!-- "file" submenu -->
+        <menu>
+            <item
+                android:id="@+id/local"
+                android:title="@string/local" />
+            <item
+                android:id="@+id/english"
+                android:title="@string/english" />
+            <item
+                android:id="@+id/french"
+                android:title="@string/french" />
+            <item
+                android:id="@+id/spanish"
+                android:title="@string/spanish" />
+        </menu>
+    </item>
+    <item android:id="@+id/text"
+        android:title="@string/text" >
+        <!-- "file" submenu -->
+        <menu>
+            <item android:id="@+id/textlarger"
+                android:title="@string/textlarger" />
+            <item android:id="@+id/textsmaller"
+                android:title="@string/textsmaller" />
+        </menu>
+    </item>
+    <item
+        android:id="@+id/help"
+        android:title="@string/help" />
+    <item
+        android:id="@+id/about"
+        android:title="@string/about" />
+
+</menu>
