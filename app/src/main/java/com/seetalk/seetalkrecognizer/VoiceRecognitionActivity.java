@@ -95,33 +95,6 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
 
         });
         mute();
-/*
-        toggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView,
-                                         boolean isChecked) {
-                if (isChecked) {
-                    //progressBar.setVisibility(View.VISIBLE);
-                    //progressBar.setIndeterminate(true);
-                    if (speech == null) {
-                        ActivityCompat.requestPermissions
-                                (VoiceRecognitionActivity.this,
-                                        new String[]{Manifest.permission.RECORD_AUDIO},
-                                        REQUEST_RECORD_PERMISSION);
-                    }
-                    else
-                    {
-                        speech.startListening(recognizerIntent);
-                    }
-                } else {
-                    //progressBar.setIndeterminate(false);
-                    //progressBar.setVisibility(View.INVISIBLE);
-                    speech.stopListening();
-                }
-            }
-        });
-*/
     }
 
     @Override
@@ -172,26 +145,36 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
             returnedText.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
         }
 
-        private void showHelp()
-        {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Help")
-                    .setMessage("Clear empties the display buffer\n Reset restarts speech recognition")
-                    .setNeutralButton("OK", null)
-                    .setCancelable(false)
-                    .create()
-                    .show();
-        }
+    private void doDialog(String title, String msg)
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(title)
+                .setMessage(msg)
+                .setNeutralButton("OK", null)
+                .setCancelable(false)
+                .create()
+                .show();
+    }
 
-        private void showAbout()
+    private void showHelp()
+    {
+        String helpTitle = "Help";
+        String helpMsg = "\nSpeak normally, directing the microphone " +
+                           "toward the conversation\n" +
+                         "\nClear: empty display area\n" +
+                         "\nReset: restart speech recogniton\n";
+        doDialog(helpTitle, helpMsg);
+    }
+
+    private void showAbout()
         {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("About")
-                   .setMessage("SeeTalk Speech Recognizer\n See Talk LLC\n Coeur d'Alene, ID")
-                   .setNeutralButton("OK", null)
-                   .setCancelable(false)
-                   .create()
-                   .show();
+            String aboutTitle = "About";
+            String aboutMsg = "\nSeeTalk Speech Recognizer\n" +
+                                "Copyright 2018\n" +
+                                "SeeTalk LLC\n" +
+                                "Coeur d'Alene, ID\n" +
+                                "\nwith appreciation to Mohit Gupt at Truiton\n";
+            doDialog(aboutTitle, aboutMsg);
         }
 
         @Override

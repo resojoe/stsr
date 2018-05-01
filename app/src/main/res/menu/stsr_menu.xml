@@ -1,15 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/text"
-        android:title="@string/text" >
-        <!-- "file" submenu -->
-        <menu>
-            <item android:id="@+id/textlarger"
-                android:title="@string/textlarger" />
-            <item android:id="@+id/textsmaller"
-                android:title="@string/textsmaller" />
-        </menu>
-    </item>
+    <item android:id="@+id/textlarger"
+          android:title="@string/textlarger" />
+    <item android:id="@+id/textsmaller"
+          android:title="@string/textsmaller" />
     <item android:id="@+id/lang"
         android:title="@string/lang" >
         <!-- "file" submenu -->
