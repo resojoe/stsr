@@ -67,8 +67,8 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         Log.i(LOG_TAG, "isRecognitionAvailable: " + SpeechRecognizer.isRecognitionAvailable(this));
         speech.setRecognitionListener(this);
         recognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE,
-                "en");
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE,"en_us");
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "en_us");
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
                 RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
@@ -129,21 +129,21 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, langPref);
     }
 
-        private void changeTextSize(boolean up)
-        {
-            float size = (float)returnedText.getTextSize();
-            float incr = size * (float)0.05; // change by 5%
+    private void changeTextSize(boolean up)
+    {
+        float size = (float)returnedText.getTextSize();
+        float incr = size * (float)0.05; // change by 5%
 
-            if ( true == up )
-            {
-                size += incr;
-            }
-            else
-            {
-                size -= incr;
-            }
-            returnedText.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
+        if ( true == up )
+        {
+            size += incr;
         }
+        else
+        {
+            size -= incr;
+        }
+        returnedText.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
+    }
 
     private void doDialog(String title, String msg)
     {
@@ -167,46 +167,46 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
     }
 
     private void showAbout()
-        {
-            String aboutTitle = "About";
-            String aboutMsg = "\nSeeTalk Speech Recognizer\n" +
-                                "Copyright 2018\n" +
-                                "SeeTalk LLC\n" +
-                                "Coeur d'Alene, ID\n" +
-                                "\nwith appreciation to Mohit Gupt at Truiton\n";
-            doDialog(aboutTitle, aboutMsg);
-        }
+    {
+        String aboutTitle = "About";
+        String aboutMsg = "\nSeeTalk Speech Recognizer\n" +
+                            "Copyright 2018\n" +
+                            "SeeTalk LLC\n" +
+                            "Coeur d'Alene, ID\n" +
+                            "\nwith appreciation to Mohit Gupt at Truiton\n";
+        doDialog(aboutTitle, aboutMsg);
+    }
 
-        @Override
-        public boolean onOptionsItemSelected(MenuItem selItem) {
-        // Handle item selection
-        switch (selItem.getItemId()) {
-            case R.id.local:
-                changeLanguage(0);
-                return true;
-            case R.id.english:
-                changeLanguage(1);
-                return true;
-            case R.id.french:
-                changeLanguage(2);
-                return true;
-            case R.id.spanish:
-                changeLanguage(3);
-                return true;
-            case R.id.textlarger:
-                changeTextSize(true);
-                return true;
-            case R.id.textsmaller:
-                changeTextSize(false);
-                return true;
-            case R.id.help:
-                showHelp();
-                return true;
-            case R.id.about:
-                showAbout();
-                return true;
-            default:
-                return super.onOptionsItemSelected(selItem);
+    @Override
+    public boolean onOptionsItemSelected(MenuItem selItem) {
+    // Handle item selection
+    switch (selItem.getItemId()) {
+        case R.id.local:
+            changeLanguage(0);
+            return true;
+        case R.id.english:
+            changeLanguage(1);
+            return true;
+        case R.id.french:
+            changeLanguage(2);
+            return true;
+        case R.id.spanish:
+            changeLanguage(3);
+            return true;
+        case R.id.textlarger:
+            changeTextSize(true);
+            return true;
+        case R.id.textsmaller:
+            changeTextSize(false);
+            return true;
+        case R.id.help:
+            showHelp();
+            return true;
+        case R.id.about:
+            showAbout();
+            return true;
+        default:
+            return super.onOptionsItemSelected(selItem);
         }
     }
 
@@ -340,12 +340,13 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
     public void onError(int errorCode) {
         Log.i(LOG_TAG, "onError " + errorCode);
         switch (errorCode) {
-            case SpeechRecognizer.ERROR_CLIENT:
             case SpeechRecognizer.ERROR_NO_MATCH:
                 listen();
                 break;
             case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
                 break;
+            case SpeechRecognizer.ERROR_CLIENT:
+            case SpeechRecognizer.ERROR_NETWORK:
             case SpeechRecognizer.ERROR_SPEECH_TIMEOUT:
                 resetRecognizer();
                 break;
