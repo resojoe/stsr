@@ -45,6 +45,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
     private int partLen = 0;
     private int retTextPos = 0;
     private String partStr = "";
+    private int lastErr = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,8 +68,8 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         Log.i(LOG_TAG, "isRecognitionAvailable: " + SpeechRecognizer.isRecognitionAvailable(this));
         speech.setRecognitionListener(this);
         recognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE,"en_us");
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "en_us");
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE,"en_US");
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "en_US");
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
                 RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
@@ -113,16 +114,16 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
                 langPref = Locale.getDefault().toString();
                 break;
             case 1: // English
-                langPref = "en";
+                langPref = "en_US";
                 break;
             case 2: // French
-                langPref = "fr";
+                langPref = "fr_FR";
                 break;
             case 3: // Spanish
-                langPref = "sp";
+                langPref = "es_MX";
                 break;
             default:
-                langPref = "en";
+                langPref = "en_US";
                 break;
         }
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, langPref);
@@ -225,20 +226,33 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
     }
 
     private void resetRecognizer() {
+        Log.i(LOG_TAG, "resetRecognizer");
         if (null != speech)
         {
+            //speech.stopListening();
             speech.cancel();
             speech.destroy();
+            speech = null;
         }
         speech = SpeechRecognizer.createSpeechRecognizer(this);
         if (null != speech)
         {
             speech.setRecognitionListener(this);
-            speech.startListening(recognizerIntent);
+            listen();
         }
         else
         {
             returnedText.append("\n*** Recognizer Unavailable ***\n");
+        }
+    }
+
+    private void restartRecognizer() {
+        Log.i(LOG_TAG, "restartRecognizer");
+        if (null != speech)
+        {
+            speech.stopListening();
+            speech.cancel();
+            speech.startListening(recognizerIntent);
         }
     }
 
@@ -270,7 +284,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
                     }
                     else
                     {
-                        speech.startListening(recognizerIntent);
+                        listen();
                     }
                 } else {
                     Toast.makeText(VoiceRecognitionActivity.this, "Permission Denied!", Toast
@@ -332,26 +346,35 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
     public void onEndOfSpeech() {
         Log.i(LOG_TAG, "onEndOfSpeech");
         //progressBar.setIndeterminate(true);
-        unlisten();
+        //unlisten();
         //toggleButton.setChecked(false);
     }
 
     @Override
     public void onError(int errorCode) {
-        Log.i(LOG_TAG, "onError " + errorCode);
+        String errorMessage = getErrorText(errorCode);
+        Log.i(LOG_TAG, "onError " + errorCode + " " + errorMessage);
         switch (errorCode) {
+            case SpeechRecognizer.ERROR_NETWORK:
             case SpeechRecognizer.ERROR_NO_MATCH:
-                listen();
+                if (SpeechRecognizer.ERROR_NO_MATCH == lastErr)
+                {
+                    resetRecognizer();
+                }
+                else
+                {
+                    listen();
+                }
                 break;
             case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
                 break;
-            case SpeechRecognizer.ERROR_CLIENT:
-            case SpeechRecognizer.ERROR_NETWORK:
             case SpeechRecognizer.ERROR_SPEECH_TIMEOUT:
                 resetRecognizer();
                 break;
+            case SpeechRecognizer.ERROR_CLIENT:
+                resetRecognizer();
+                break;
             default:
-                String errorMessage = getErrorText(errorCode);
                 String text = "";
                 text = "=====> " + errorMessage + "\n";
                 Log.d(LOG_TAG, "FAILED " + errorMessage);
@@ -360,6 +383,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
                 listen();
                 break;
         }
+        lastErr = errorCode;
     }
 
     @Override
@@ -416,6 +440,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         partStr = "";
         retTextPos = returnedText.length();
         listen();
+        lastErr = 0;
     }
 
     @Override
