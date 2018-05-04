@@ -22,6 +22,7 @@ import android.view.MenuItem;
 import android.view.MenuInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -37,7 +38,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
 
     private static final int REQUEST_RECORD_PERMISSION = 100;
     private TextView returnedText;
-    private ToggleButton toggleButton;
+    private ToggleButton togglePause;
     private ProgressBar progressBar;
     private SpeechRecognizer speech = null;
     private Intent recognizerIntent;
@@ -51,6 +52,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
     private String langStr = "prefLang";
     private String defLangStr = "en_US";
     private String langPref;
+    private boolean isPaused = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,7 +72,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
 
         clrButton = (Button) findViewById(R.id.clearButton);
         rstButton = (Button) findViewById(R.id.resetButton);
-        //toggleButton = (ToggleButton) findViewById(R.id.toggleButton1);
+        togglePause = (ToggleButton) findViewById(R.id.togglePause);
 
         // load stored settings if they exist
         sharedPref = getPreferences(Context.MODE_PRIVATE);
@@ -124,7 +126,17 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
             }
 
         });
-
+        togglePause.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    isPaused = true;
+                    speech.cancel();
+                } else {
+                    isPaused = false;
+                    listen();
+                }
+            }
+        });
         // turn off the sampling start/end audio output
         mute();
     }
@@ -277,6 +289,8 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
             speech.destroy();
             speech = null;
         }
+        isPaused = false;
+        togglePause.setChecked(false);
         speech = SpeechRecognizer.createSpeechRecognizer(this);
         if (null != speech)
         {
@@ -348,6 +362,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
             speech.destroy();
             speech = null;
         }
+        togglePause.setChecked(false);
         unmute();
         super.onPause();
     }
@@ -387,33 +402,32 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
     public void onError(int errorCode) {
         String errorMessage = getErrorText(errorCode);
         Log.i(LOG_TAG, "onError " + errorCode + " " + errorMessage);
-        switch (errorCode) {
-            case SpeechRecognizer.ERROR_NETWORK:
-            case SpeechRecognizer.ERROR_NO_MATCH:
-                if (SpeechRecognizer.ERROR_NO_MATCH == lastErr)
-                {
+        if (! isPaused) {
+            switch (errorCode) {
+                case SpeechRecognizer.ERROR_NETWORK:
+                case SpeechRecognizer.ERROR_NO_MATCH:
+                    if (SpeechRecognizer.ERROR_NO_MATCH == lastErr) {
+                        resetRecognizer();
+                    } else {
+                        listen();
+                    }
+                    break;
+                case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
+                    break;
+                case SpeechRecognizer.ERROR_SPEECH_TIMEOUT:
                     resetRecognizer();
-                }
-                else
-                {
+                    break;
+                case SpeechRecognizer.ERROR_CLIENT:
+                    resetRecognizer();
+                    break;
+                default:
+                    String text = "=====> " + errorMessage + "\n";
+                    Log.d(LOG_TAG, "FAILED " + errorMessage);
+                    returnedText.append(text);
+                    //toggleButton.setChecked(false);
                     listen();
-                }
-                break;
-            case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
-                break;
-            case SpeechRecognizer.ERROR_SPEECH_TIMEOUT:
-                resetRecognizer();
-                break;
-            case SpeechRecognizer.ERROR_CLIENT:
-                resetRecognizer();
-                break;
-            default:
-                String text = "=====> " + errorMessage + "\n";
-                Log.d(LOG_TAG, "FAILED " + errorMessage);
-                returnedText.append(text);
-                //toggleButton.setChecked(false);
-                listen();
-                break;
+                    break;
+            }
         }
         lastErr = errorCode;
     }

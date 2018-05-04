@@ -51,7 +51,21 @@
         android:layout_alignParentRight="true"
         android:layout_marginEnd="45dp"
         android:layout_marginRight="45dp"
-        android:text="Reset" />
+        android:text="@string/reset" />
+
+    <ToggleButton
+        android:id="@+id/togglePause"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginStart="45dp"
+        android:layout_marginLeft="45dp"
+        android:textOff="@string/pause"
+        android:textOn="@string/listen"/>
+    -->
     <!---
     <Button
         android:id="@+id/resetButton"
@@ -65,14 +79,4 @@
         android:paddingRight="10dp"
         />
    -->
-<!--
-    <ToggleButton
-        android:id="@+id/toggleButton1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="14dp"
-        android:text="ToggleButton" />
--->
 </RelativeLayout>

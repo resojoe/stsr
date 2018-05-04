@@ -12,4 +12,8 @@
     <string name="save">Save Changes</string>
     <string name="help">Help</string>
     <string name="about">About</string>
+    <string name="reset">Reset</string>
+    <string name="pause">Pause</string>
+    <string name="listen">Listen</string>
+
 </resources>
