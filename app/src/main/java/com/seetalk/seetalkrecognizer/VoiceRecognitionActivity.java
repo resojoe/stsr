@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.os.Bundle;
@@ -21,7 +22,6 @@ import android.view.MenuItem;
 import android.view.MenuInflater;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -30,14 +30,14 @@ import android.widget.ToggleButton;
 import java.util.ArrayList;
 import java.util.Locale;
 
+import static android.app.PendingIntent.getActivity;
+
 public class VoiceRecognitionActivity extends AppCompatActivity implements
         RecognitionListener {
 
     private static final int REQUEST_RECORD_PERMISSION = 100;
     private TextView returnedText;
     private ToggleButton toggleButton;
-    private Button clrButton;
-    private Button rstButton;
     private ProgressBar progressBar;
     private SpeechRecognizer speech = null;
     private Intent recognizerIntent;
@@ -46,40 +46,69 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
     private int retTextPos = 0;
     private String partStr = "";
     private int lastErr = 0;
+    private SharedPreferences sharedPref;
+    private String sizeStr = "textSize";
+    private String langStr = "prefLang";
+    private String defLangStr = "en_US";
+    private String langPref;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Button clrButton;
+        Button rstButton;
+        float defaultTextSize;
+        float savedTextSize;
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // set our textView to scroll and output starting text
         returnedText = (TextView) findViewById(R.id.textView1);
         returnedText.setMovementMethod(new ScrollingMovementMethod());
         returnedText.setText("*** SeeTalk Begins ***\n");
         retTextPos = returnedText.length();
-        progressBar = (ProgressBar) findViewById(R.id.progressBar1);
+
         clrButton = (Button) findViewById(R.id.clearButton);
         rstButton = (Button) findViewById(R.id.resetButton);
         //toggleButton = (ToggleButton) findViewById(R.id.toggleButton1);
 
+        // load stored settings if they exist
+        sharedPref = getPreferences(Context.MODE_PRIVATE);
+        defaultTextSize = returnedText.getTextSize();
+        savedTextSize = sharedPref.getFloat(sizeStr, defaultTextSize);
+        if (savedTextSize != defaultTextSize) {
+            returnedText.setTextSize(TypedValue.COMPLEX_UNIT_PX, savedTextSize);
+        }
+        langPref = sharedPref.getString(langStr, defLangStr);
 
+        //configure the progress bar input indicator
+        progressBar = (ProgressBar) findViewById(R.id.progressBar1);
         progressBar.setVisibility(View.VISIBLE);
         progressBar.setIndeterminate(false);
         progressBar.setMax(10);
+
+        // allocate our first speech recognizer
         speech = SpeechRecognizer.createSpeechRecognizer(this);
         Log.i(LOG_TAG, "isRecognitionAvailable: " + SpeechRecognizer.isRecognitionAvailable(this));
         speech.setRecognitionListener(this);
+
+        // allocate and configure the recognizerIntent
         recognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE,"en_US");
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "en_US");
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE,langPref);
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, langPref);
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
                 RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 500);
         //recognizerIntent.putExtra("android.speech.extra.DICTATION_MODE", true);
+
         ActivityCompat.requestPermissions
                 (VoiceRecognitionActivity.this,
                         new String[]{Manifest.permission.RECORD_AUDIO},
                         REQUEST_RECORD_PERMISSION);
+
+        // define behaviors for button presses
         clrButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 returnedText.setText("==> buffer cleared <==\n");
@@ -95,6 +124,8 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
             }
 
         });
+
+        // turn off the sampling start/end audio output
         mute();
     }
 
@@ -107,7 +138,6 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
 
     private void changeLanguage(int lang)
     {
-        String langPref;
         switch( lang )
         {
             case 0: // locale
@@ -126,13 +156,15 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
                 langPref = "en_US";
                 break;
         }
+
+        /* update the recognizer intent with the selected language */
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, langPref);
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, langPref);
     }
 
     private void changeTextSize(boolean up)
     {
-        float size = (float)returnedText.getTextSize();
+        float size = returnedText.getTextSize();
         float incr = size * (float)0.05; // change by 5%
 
         if ( true == up )
@@ -144,6 +176,14 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
             size -= incr;
         }
         returnedText.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
+    }
+
+    private void saveChanges()
+    {
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putFloat(sizeStr, returnedText.getTextSize());
+        editor.putString(langStr, langPref);
+        editor.apply();
     }
 
     private void doDialog(String title, String msg)
@@ -200,6 +240,9 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         case R.id.textsmaller:
             changeTextSize(false);
             return true;
+        case R.id.save:
+            saveChanges();
+            return true;
         case R.id.help:
             showHelp();
             return true;
@@ -243,16 +286,6 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         else
         {
             returnedText.append("\n*** Recognizer Unavailable ***\n");
-        }
-    }
-
-    private void restartRecognizer() {
-        Log.i(LOG_TAG, "restartRecognizer");
-        if (null != speech)
-        {
-            speech.stopListening();
-            speech.cancel();
-            speech.startListening(recognizerIntent);
         }
     }
 
@@ -375,8 +408,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
                 resetRecognizer();
                 break;
             default:
-                String text = "";
-                text = "=====> " + errorMessage + "\n";
+                String text = "=====> " + errorMessage + "\n";
                 Log.d(LOG_TAG, "FAILED " + errorMessage);
                 returnedText.append(text);
                 //toggleButton.setChecked(false);
@@ -423,7 +455,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
     @Override
     public void onResults(Bundle results) {
 
-        String text = "";
+        String text;
         String sep = "\n----\n";
         String tag = "\n++++\n";
         ArrayList<String> matches = results

@@ -23,6 +23,9 @@
         </menu>
     </item>
     <item
+        android:id="@+id/save"
+        android:title="@string/save" />
+    <item
         android:id="@+id/help"
         android:title="@string/help" />
     <item

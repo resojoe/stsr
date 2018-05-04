@@ -9,6 +9,7 @@
     <string name="text">Text</string>
     <string name="textlarger">x -> X</string>
     <string name="textsmaller">X -> x</string>
+    <string name="save">Save Changes</string>
     <string name="help">Help</string>
     <string name="about">About</string>
 </resources>
