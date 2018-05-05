@@ -226,6 +226,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
                             "Copyright 2018\n" +
                             "SeeTalk LLC\n" +
                             "Coeur d'Alene, ID\n" +
+                            "\nPlease send comments to support@seetalk.com\n" +
                             "\nwith appreciation to Mohit Gupt at Truiton\n";
         doDialog(aboutTitle, aboutMsg);
     }
