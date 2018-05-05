@@ -214,8 +214,10 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         String helpTitle = "Help";
         String helpMsg = "\nSpeak normally, directing the microphone " +
                            "toward the conversation\n" +
-                         "\nClear: empty display area\n" +
-                         "\nReset: restart speech recogniton\n";
+                           "\nPause: suspend listening\n" +
+                           "\nListen: activate listening\n" +
+                           "\nClear: empty display area\n" +
+                           "\nReset: restart speech recogniton\n";
         doDialog(helpTitle, helpMsg);
     }
 
