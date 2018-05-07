@@ -1,4 +1,4 @@
-package com.seetalk.seetalkrecognizer;
+package com.seetalk.seetalk;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

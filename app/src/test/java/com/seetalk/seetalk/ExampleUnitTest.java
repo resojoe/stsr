@@ -1,4 +1,4 @@
-package com.seetalk.seetalkrecognizer;
+package com.seetalk.seetalk;
 
 import org.junit.Test;
 

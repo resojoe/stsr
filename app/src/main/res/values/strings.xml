@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">SeeTalkRecognizer</string>
+    <string name="app_name">SeeTalk</string>
     <string name="clear">Clear</string>
     <string name="lang">Language</string>
     <string name="local">Local</string>
