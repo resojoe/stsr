@@ -283,7 +283,6 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
     private void mute() {
         //mute audio
         AudioManager amanager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        audioLevel = amanager.getStreamVolume(AudioManager.STREAM_MUSIC);
         amanager.setStreamMute(AudioManager.STREAM_NOTIFICATION, true);
         amanager.setStreamMute(AudioManager.STREAM_MUSIC, true);
         amanager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0);
