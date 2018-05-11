@@ -28,24 +28,20 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-import com.seetalk.seetalk.R;
-
 import java.util.ArrayList;
 import java.util.Locale;
-
-import static android.app.PendingIntent.getActivity;
 
 public class VoiceRecognitionActivity extends AppCompatActivity implements
         RecognitionListener {
 
+    private static final String LOG_TAG = "VoiceRecognitionActivity";
     private static final int REQUEST_RECORD_PERMISSION = 100;
-    private static final int maxLowVol = 30;
+    private static final String defLangStr = "en_US";
     private TextView returnedText;
     private ToggleButton togglePause;
     private ProgressBar progressBar;
     private SpeechRecognizer speech = null;
     private Intent recognizerIntent;
-    private String LOG_TAG = "VoiceRecognitionActivity";
     private int partLen = 0;
     private int retTextPos = 0;
     private String partStr = "";
@@ -53,18 +49,17 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
     private SharedPreferences sharedPref;
     private String sizeStr = "textSize";
     private String langStr = "prefLang";
-    private String defLangStr = "en_US";
     private String langPref;
     private boolean isPaused = false;
-    private int lowVolCount = 0;
     private int noMatchCount = 0;
+    private int audioLevel = 0;
 
     private enum prefLang {
         langLocal,
         langEnglish,
         langFrench,
         langSpanish
-    };
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +70,9 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        AudioManager amanager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        audioLevel = amanager.getStreamVolume(AudioManager.STREAM_MUSIC);
 
         // set our textView to scroll and output starting text
         returnedText = (TextView) findViewById(R.id.textView1);
@@ -153,6 +151,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
     }
 
     private void requestMicrophone(){
+        mute();
         ActivityCompat.requestPermissions
                 (VoiceRecognitionActivity.this,
                         new String[]{Manifest.permission.RECORD_AUDIO},
@@ -284,8 +283,10 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
     private void mute() {
         //mute audio
         AudioManager amanager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        audioLevel = amanager.getStreamVolume(AudioManager.STREAM_MUSIC);
         amanager.setStreamMute(AudioManager.STREAM_NOTIFICATION, true);
         amanager.setStreamMute(AudioManager.STREAM_MUSIC, true);
+        amanager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0);
     }
 
     private void unmute() {
@@ -293,6 +294,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         AudioManager amanager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         amanager.setStreamMute(AudioManager.STREAM_NOTIFICATION, false);
         amanager.setStreamMute(AudioManager.STREAM_MUSIC, false);
+        amanager.setStreamVolume(AudioManager.STREAM_MUSIC, audioLevel, 0);
     }
 
     private void resetRecognizer() {
@@ -317,7 +319,6 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
             returnedText.append("\n*** Recognizer Unavailable ***\n");
         }
         lastErr = 0;
-        lowVolCount = 0;
     }
 
     private void listen()
@@ -342,6 +343,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         switch (requestCode) {
             case REQUEST_RECORD_PERMISSION:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    mute();
                     if (null == speech)
                     {
                         resetRecognizer();
@@ -418,7 +420,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
     @Override
     public void onError(int errorCode) {
         String errorMessage = getErrorText(errorCode);
-        Log.i(LOG_TAG, "onError " + errorCode + " " + errorMessage);
+        //Log.i(LOG_TAG, "onError " + errorCode );
         if (! isPaused) {
             switch (errorCode) {
                 case SpeechRecognizer.ERROR_NO_MATCH:
@@ -436,7 +438,8 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
                     break;
                 case SpeechRecognizer.ERROR_SPEECH_TIMEOUT:
                     //resetRecognizer();
-                    listen();
+                    //listen();
+                    requestMicrophone();
                     break;
                 case SpeechRecognizer.ERROR_CLIENT:
                     resetRecognizer();
@@ -509,28 +512,13 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         retTextPos = returnedText.length();
         listen();
         lastErr = 0;
+        noMatchCount = 0;
     }
 
     @Override
     public void onRmsChanged(float rmsdB) {
         //Log.i(LOG_TAG, "onRmsChanged: " + rmsdB);
         progressBar.setProgress((int) rmsdB);
-/*
-        if (rmsdB < 1.0) lowVolCount++;
-        if (10 < lowVolCount)
-        {
-            listen();
-            lowVolCount = 0;
-        }
-        if (lowVolCount >= maxLowVol)
-        {
-            //Log.i(LOG_TAG, "onRmsChanged: reset speech");
-            speech.cancel();
-            lowVolCount = 0;
-            //requestMicrophone();
-            resetRecognizer();
-        }
-*/
     }
 
     public static String getErrorText(int errorCode) {
