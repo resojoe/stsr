@@ -28,6 +28,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.seetalk.seetalk.R;
+
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -37,6 +39,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         RecognitionListener {
 
     private static final int REQUEST_RECORD_PERMISSION = 100;
+    private static final int maxLowVol = 30;
     private TextView returnedText;
     private ToggleButton togglePause;
     private ProgressBar progressBar;
@@ -53,6 +56,15 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
     private String defLangStr = "en_US";
     private String langPref;
     private boolean isPaused = false;
+    private int lowVolCount = 0;
+    private int noMatchCount = 0;
+
+    private enum prefLang {
+        langLocal,
+        langEnglish,
+        langFrench,
+        langSpanish
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,11 +101,6 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         progressBar.setIndeterminate(false);
         progressBar.setMax(10);
 
-        // allocate our first speech recognizer
-        speech = SpeechRecognizer.createSpeechRecognizer(this);
-        Log.i(LOG_TAG, "isRecognitionAvailable: " + SpeechRecognizer.isRecognitionAvailable(this));
-        speech.setRecognitionListener(this);
-
         // allocate and configure the recognizerIntent
         recognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE,langPref);
@@ -105,10 +112,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 500);
         //recognizerIntent.putExtra("android.speech.extra.DICTATION_MODE", true);
 
-        ActivityCompat.requestPermissions
-                (VoiceRecognitionActivity.this,
-                        new String[]{Manifest.permission.RECORD_AUDIO},
-                        REQUEST_RECORD_PERMISSION);
+        requestMicrophone();
 
         // define behaviors for button presses
         clrButton.setOnClickListener(new View.OnClickListener() {
@@ -148,20 +152,27 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         return true;
     }
 
-    private void changeLanguage(int lang)
+    private void requestMicrophone(){
+        ActivityCompat.requestPermissions
+                (VoiceRecognitionActivity.this,
+                        new String[]{Manifest.permission.RECORD_AUDIO},
+                        REQUEST_RECORD_PERMISSION);
+    }
+
+    private void changeLanguage(prefLang lang)
     {
         switch( lang )
         {
-            case 0: // locale
+            case langLocal: // locale
                 langPref = Locale.getDefault().toString();
                 break;
-            case 1: // English
+            case langEnglish: // English
                 langPref = "en_US";
                 break;
-            case 2: // French
+            case langFrench: // French
                 langPref = "fr_FR";
                 break;
-            case 3: // Spanish
+            case langSpanish: // Spanish
                 langPref = "es_MX";
                 break;
             default:
@@ -196,6 +207,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         editor.putFloat(sizeStr, returnedText.getTextSize());
         editor.putString(langStr, langPref);
         editor.apply();
+        returnedText.append("\n---> Settings saved <---\n");
     }
 
     private void doDialog(String title, String msg)
@@ -238,16 +250,16 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
     // Handle item selection
     switch (selItem.getItemId()) {
         case R.id.local:
-            changeLanguage(0);
+            changeLanguage(prefLang.langLocal);
             return true;
         case R.id.english:
-            changeLanguage(1);
+            changeLanguage(prefLang.langEnglish);
             return true;
         case R.id.french:
-            changeLanguage(2);
+            changeLanguage(prefLang.langFrench);
             return true;
         case R.id.spanish:
-            changeLanguage(3);
+            changeLanguage(prefLang.langSpanish);
             return true;
         case R.id.textlarger:
             changeTextSize(true);
@@ -284,7 +296,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
     }
 
     private void resetRecognizer() {
-        Log.i(LOG_TAG, "resetRecognizer");
+        //Log.i(LOG_TAG, "resetRecognizer");
         if (null != speech)
         {
             //speech.stopListening();
@@ -304,6 +316,8 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         {
             returnedText.append("\n*** Recognizer Unavailable ***\n");
         }
+        lastErr = 0;
+        lowVolCount = 0;
     }
 
     private void listen()
@@ -375,7 +389,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         super.onStop();
         if (speech != null) {
             speech.destroy();
-            Log.i(LOG_TAG, "destroy");
+            //Log.i(LOG_TAG, "destroy");
         }
         unmute();
     }
@@ -383,19 +397,19 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
 
     @Override
     public void onBeginningOfSpeech() {
-        Log.i(LOG_TAG, "onBeginningOfSpeech");
+        //Log.i(LOG_TAG, "onBeginningOfSpeech");
         //progressBar.setIndeterminate(false);
         //progressBar.setMax(10);
     }
 
     @Override
     public void onBufferReceived(byte[] buffer) {
-        Log.i(LOG_TAG, "onBufferReceived: " + buffer);
+        //Log.i(LOG_TAG, "onBufferReceived: " + buffer);
     }
 
     @Override
     public void onEndOfSpeech() {
-        Log.i(LOG_TAG, "onEndOfSpeech");
+        //Log.i(LOG_TAG, "onEndOfSpeech");
         //progressBar.setIndeterminate(true);
         //unlisten();
         //toggleButton.setChecked(false);
@@ -407,25 +421,30 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         Log.i(LOG_TAG, "onError " + errorCode + " " + errorMessage);
         if (! isPaused) {
             switch (errorCode) {
-                case SpeechRecognizer.ERROR_NETWORK:
                 case SpeechRecognizer.ERROR_NO_MATCH:
-                    if (SpeechRecognizer.ERROR_NO_MATCH == lastErr) {
+                    noMatchCount++;
+                    if (noMatchCount > 3) {
                         resetRecognizer();
-                    } else {
+                        noMatchCount = 0;
+                    }
+                    else
+                    {
                         listen();
                     }
                     break;
                 case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
                     break;
                 case SpeechRecognizer.ERROR_SPEECH_TIMEOUT:
-                    resetRecognizer();
+                    //resetRecognizer();
+                    listen();
                     break;
                 case SpeechRecognizer.ERROR_CLIENT:
                     resetRecognizer();
                     break;
+                case SpeechRecognizer.ERROR_NETWORK:
                 default:
                     String text = "=====> " + errorMessage + "\n";
-                    Log.d(LOG_TAG, "FAILED " + errorMessage);
+                    //Log.d(LOG_TAG, "FAILED " + errorMessage);
                     returnedText.append(text);
                     //toggleButton.setChecked(false);
                     listen();
@@ -437,7 +456,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
 
     @Override
     public void onEvent(int arg0, Bundle arg1) {
-        Log.i(LOG_TAG, "onEvent");
+        //Log.i(LOG_TAG, "onEvent");
     }
 
     @Override
@@ -458,7 +477,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
                 text = text.substring(partLen, curLen);
                 returnedText.append(text);
                 partStr = partStr + text;
-//                Log.i(LOG_TAG, "onPartialResults " + text + " " + partStr);
+                //Log.i(LOG_TAG, "onPartialResults " + text + " " + partStr);
                 partLen = curLen;
             }
         }
@@ -466,7 +485,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
 
     @Override
     public void onReadyForSpeech(Bundle arg0) {
-        Log.i(LOG_TAG, "onReadyForSpeech");
+        //Log.i(LOG_TAG, "onReadyForSpeech");
     }
 
     @Override
@@ -494,8 +513,24 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
 
     @Override
     public void onRmsChanged(float rmsdB) {
-//        Log.i(LOG_TAG, "onRmsChanged: " + rmsdB);
+        //Log.i(LOG_TAG, "onRmsChanged: " + rmsdB);
         progressBar.setProgress((int) rmsdB);
+/*
+        if (rmsdB < 1.0) lowVolCount++;
+        if (10 < lowVolCount)
+        {
+            listen();
+            lowVolCount = 0;
+        }
+        if (lowVolCount >= maxLowVol)
+        {
+            //Log.i(LOG_TAG, "onRmsChanged: reset speech");
+            speech.cancel();
+            lowVolCount = 0;
+            //requestMicrophone();
+            resetRecognizer();
+        }
+*/
     }
 
     public static String getErrorText(int errorCode) {
