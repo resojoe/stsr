@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.os.Bundle;
+import android.os.Build;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
@@ -21,6 +22,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MenuInflater;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ProgressBar;
@@ -33,7 +35,7 @@ import java.util.Locale;
 
 public class VoiceRecognitionActivity extends AppCompatActivity implements
         RecognitionListener {
-
+    private static final String versionStr = "Version 1.01\n";
     private static final String LOG_TAG = "VoiceRecognitionActivity";
     private static final int REQUEST_RECORD_PERMISSION = 100;
     private static final String defLangStr = "en_US";
@@ -52,7 +54,8 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
     private String langPref;
     private boolean isPaused = false;
     private int noMatchCount = 0;
-    private int audioLevel = 0;
+    private int audioLevelMusic = 0;
+    private int audioLevelNotif = 0;
 
     private enum prefLang {
         langLocal,
@@ -70,9 +73,11 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         AudioManager amanager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        audioLevel = amanager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        audioLevelMusic = amanager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        audioLevelNotif = amanager.getStreamVolume(AudioManager.STREAM_NOTIFICATION);
 
         // set our textView to scroll and output starting text
         returnedText = (TextView) findViewById(R.id.textView1);
@@ -236,6 +241,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
     {
         String aboutTitle = "About";
         String aboutMsg = "\nSeeTalk Speech Recognizer\n" +
+                            versionStr +
                             "Copyright 2018\n" +
                             "SeeTalk LLC\n" +
                             "Coeur d'Alene, ID\n" +
@@ -283,17 +289,27 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
     private void mute() {
         //mute audio
         AudioManager amanager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        amanager.setStreamMute(AudioManager.STREAM_NOTIFICATION, true);
-        amanager.setStreamMute(AudioManager.STREAM_MUSIC, true);
-        amanager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            amanager.setStreamMute(AudioManager.STREAM_NOTIFICATION, true);
+            amanager.setStreamMute(AudioManager.STREAM_MUSIC, true);
+        }
+        else {
+            amanager.setStreamVolume(AudioManager.STREAM_MUSIC,0, 0);
+            amanager.setStreamVolume(AudioManager.STREAM_NOTIFICATION, 0, 0);
+        }
     }
 
     private void unmute() {
         //unmute audio
         AudioManager amanager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        amanager.setStreamMute(AudioManager.STREAM_NOTIFICATION, false);
-        amanager.setStreamMute(AudioManager.STREAM_MUSIC, false);
-        amanager.setStreamVolume(AudioManager.STREAM_MUSIC, audioLevel, 0);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            amanager.setStreamMute(AudioManager.STREAM_NOTIFICATION, false);
+            amanager.setStreamMute(AudioManager.STREAM_MUSIC, false);
+        }
+        else {
+            amanager.setStreamVolume(AudioManager.STREAM_MUSIC, audioLevelMusic, 0);
+            amanager.setStreamVolume(AudioManager.STREAM_NOTIFICATION, audioLevelNotif, 0);
+        }
     }
 
     private void resetRecognizer() {
