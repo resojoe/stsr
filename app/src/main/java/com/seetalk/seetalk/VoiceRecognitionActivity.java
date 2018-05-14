@@ -75,9 +75,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_main);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        AudioManager amanager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        audioLevelMusic = amanager.getStreamVolume(AudioManager.STREAM_MUSIC);
-        audioLevelNotif = amanager.getStreamVolume(AudioManager.STREAM_NOTIFICATION);
+        saveAudioLevels();
 
         // set our textView to scroll and output starting text
         returnedText = (TextView) findViewById(R.id.textView1);
@@ -153,6 +151,12 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.stsr_menu, menu);
         return true;
+    }
+
+    private void saveAudioLevels() {
+        AudioManager amanager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        audioLevelMusic = amanager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        audioLevelNotif = amanager.getStreamVolume(AudioManager.STREAM_NOTIFICATION);
     }
 
     private void requestMicrophone(){
@@ -292,19 +296,21 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             amanager.setStreamMute(AudioManager.STREAM_NOTIFICATION, true);
             amanager.setStreamMute(AudioManager.STREAM_MUSIC, true);
+            amanager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
         }
         else {
-            amanager.setStreamVolume(AudioManager.STREAM_MUSIC,0, 0);
-            amanager.setStreamVolume(AudioManager.STREAM_NOTIFICATION, 0, 0);
+            amanager.setStreamVolume(AudioManager.STREAM_MUSIC,AudioManager.ADJUST_MUTE, 0);
+            amanager.setStreamVolume(AudioManager.STREAM_NOTIFICATION, AudioManager.ADJUST_MUTE, 0);
         }
     }
 
     private void unmute() {
         //unmute audio
-        AudioManager amanager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        AudioManager amanager = (AudioManager) getSystemService(AUDIO_SERVICE);
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             amanager.setStreamMute(AudioManager.STREAM_NOTIFICATION, false);
             amanager.setStreamMute(AudioManager.STREAM_MUSIC, false);
+            amanager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
         }
         else {
             amanager.setStreamVolume(AudioManager.STREAM_MUSIC, audioLevelMusic, 0);
@@ -376,6 +382,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
 
     @Override
     public void onResume() {
+        saveAudioLevels();
         speech = SpeechRecognizer.createSpeechRecognizer(this);
         if (null != speech)
         {

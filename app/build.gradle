@@ -3,7 +3,7 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 27
     defaultConfig {
-        applicationId "com.seetalk.seetalkrecognizer"
+        applicationId "com.seetalk.seetalk"
         minSdkVersion 15
         targetSdkVersion 26
         versionCode 1
