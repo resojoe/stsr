@@ -15,6 +15,7 @@ import android.speech.SpeechRecognizer;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Layout;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.util.TypedValue;
@@ -125,7 +126,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         });
         rstButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                returnedText.append("==> reset speech <==\n");
+                appendTextAndScroll("==> reset speech <==\n");
                 retTextPos = returnedText.length();
                 resetRecognizer();
             }
@@ -215,7 +216,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         editor.putFloat(sizeStr, returnedText.getTextSize());
         editor.putString(langStr, langPref);
         editor.apply();
-        returnedText.append("\n---> Settings saved <---\n");
+        appendTextAndScroll("\n---> Settings saved <---\n");
     }
 
     private void doDialog(String title, String msg)
@@ -337,7 +338,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         }
         else
         {
-            returnedText.append("\n*** Recognizer Unavailable ***\n");
+            appendTextAndScroll("\n*** Recognizer Unavailable ***\n");
         }
         lastErr = 0;
     }
@@ -355,6 +356,20 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         if (null != speech)
         {
             speech.stopListening();
+        }
+    }
+
+    private void appendTextAndScroll(String text)
+    {
+        if(returnedText != null){
+            returnedText.append(text);
+            final Layout layout = returnedText.getLayout();
+            if(layout != null){
+                int scrollDelta = layout.getLineBottom(returnedText.getLineCount() - 1)
+                        - returnedText.getScrollY() - returnedText.getHeight();
+                if(scrollDelta > 0)
+                    returnedText.scrollBy(0, scrollDelta);
+            }
         }
     }
 
@@ -470,7 +485,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
                 default:
                     String text = "=====> " + errorMessage + "\n";
                     //Log.d(LOG_TAG, "FAILED " + errorMessage);
-                    returnedText.append(text);
+                    appendTextAndScroll(text);
                     //toggleButton.setChecked(false);
                     listen();
                     break;
@@ -500,7 +515,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
             if (curLen > partLen)
             {
                 text = text.substring(partLen, curLen);
-                returnedText.append(text);
+                appendTextAndScroll(text);
                 partStr = partStr + text;
                 //Log.i(LOG_TAG, "onPartialResults " + text + " " + partStr);
                 partLen = curLen;
@@ -525,10 +540,10 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         //Log.i(LOG_TAG, "onResults" + "\n>" + partStr + "<\n" + ">" + text + "<\n");
         if (false == partStr.equals(text)) {
             text = tag + text;
-            returnedText.append(text);
+            appendTextAndScroll(text);
         }
 
-        returnedText.append(sep);
+        appendTextAndScroll(sep);
         partLen = 0;
         partStr = "";
         retTextPos = returnedText.length();
