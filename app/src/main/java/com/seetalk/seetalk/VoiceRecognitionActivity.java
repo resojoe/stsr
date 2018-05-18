@@ -36,7 +36,7 @@ import java.util.Locale;
 
 public class VoiceRecognitionActivity extends AppCompatActivity implements
         RecognitionListener {
-    private static final String versionStr = "Version 1.01\n";
+    private static final String versionStr = "Version 1.02\n";
     private static final String LOG_TAG = "VoiceRecognitionActivity";
     private static final int REQUEST_RECORD_PERMISSION = 100;
     private static final String defLangStr = "en_US";
@@ -126,7 +126,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         });
         rstButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                appendTextAndScroll("==> reset speech <==\n");
+                appendText("==> reset speech <==\n");
                 retTextPos = returnedText.length();
                 resetRecognizer();
             }
@@ -216,7 +216,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         editor.putFloat(sizeStr, returnedText.getTextSize());
         editor.putString(langStr, langPref);
         editor.apply();
-        appendTextAndScroll("\n---> Settings saved <---\n");
+        appendText("\n---> Settings saved <---\n");
     }
 
     private void doDialog(String title, String msg)
@@ -249,7 +249,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
                             versionStr +
                             "Copyright 2018\n" +
                             "SeeTalk LLC\n" +
-                            "Coeur d'Alene, ID\n" +
+                            "Post Falls, ID\n" +
                             "\nPlease send comments to support@seetalk.org\n" +
                             "\nwith appreciation to Mohit Gupt at Truiton\n";
         doDialog(aboutTitle, aboutMsg);
@@ -338,7 +338,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         }
         else
         {
-            appendTextAndScroll("\n*** Recognizer Unavailable ***\n");
+            appendText("\n*** Recognizer Unavailable ***\n");
         }
         lastErr = 0;
     }
@@ -359,10 +359,11 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         }
     }
 
-    private void appendTextAndScroll(String text)
+    private void appendText(String text)
     {
         if(returnedText != null){
             returnedText.append(text);
+/*
             final Layout layout = returnedText.getLayout();
             if(layout != null){
                 int scrollDelta = layout.getLineBottom(returnedText.getLineCount() - 1)
@@ -370,6 +371,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
                 if(scrollDelta > 0)
                     returnedText.scrollBy(0, scrollDelta);
             }
+*/
         }
     }
 
@@ -485,7 +487,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
                 default:
                     String text = "=====> " + errorMessage + "\n";
                     //Log.d(LOG_TAG, "FAILED " + errorMessage);
-                    appendTextAndScroll(text);
+                    appendText(text);
                     //toggleButton.setChecked(false);
                     listen();
                     break;
@@ -515,7 +517,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
             if (curLen > partLen)
             {
                 text = text.substring(partLen, curLen);
-                appendTextAndScroll(text);
+                appendText(text);
                 partStr = partStr + text;
                 //Log.i(LOG_TAG, "onPartialResults " + text + " " + partStr);
                 partLen = curLen;
@@ -540,10 +542,10 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         //Log.i(LOG_TAG, "onResults" + "\n>" + partStr + "<\n" + ">" + text + "<\n");
         if (false == partStr.equals(text)) {
             text = tag + text;
-            appendTextAndScroll(text);
+            appendText(text);
         }
 
-        appendTextAndScroll(sep);
+        appendText(sep);
         partLen = 0;
         partStr = "";
         retTextPos = returnedText.length();

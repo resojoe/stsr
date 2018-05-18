@@ -26,6 +26,7 @@
         android:layout_marginBottom="100dp"
         android:background="#0F0F0F"
         android:freezesText="true"
+        android:gravity="bottom"
         android:textColor="#F5F5F5"
         android:textSize="32sp" />
     <Button
