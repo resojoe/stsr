@@ -19,6 +19,7 @@ import android.text.Layout;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MenuInflater;
@@ -31,12 +32,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
+import android.view.ScaleGestureDetector.SimpleOnScaleGestureListener;
+
+
 import java.util.ArrayList;
 import java.util.Locale;
 
 public class VoiceRecognitionActivity extends AppCompatActivity implements
         RecognitionListener {
-    private static final String versionStr = "Version 1.02\n";
+    private static final String versionStr = "Version 1.03\n";
     private static final String LOG_TAG = "VoiceRecognitionActivity";
     private static final int REQUEST_RECORD_PERMISSION = 100;
     private static final String defLangStr = "en_US";
@@ -57,6 +63,10 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
     private int noMatchCount = 0;
     private int audioLevelMusic = 0;
     private int audioLevelNotif = 0;
+
+    ScaleGestureDetector scaleGestureDetector;
+    GestureDetector      scrollDetector;
+    GestureDetector.SimpleOnGestureListener simpleGestureListener;
 
     private enum prefLang {
         langLocal,
@@ -80,7 +90,15 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
 
         // set our textView to scroll and output starting text
         returnedText = (TextView) findViewById(R.id.textView1);
-        returnedText.setMovementMethod(new ScrollingMovementMethod());
+
+        scaleGestureDetector =
+                new ScaleGestureDetector(this,
+                        new SeeTalkOnScaleGestureListener(returnedText));
+
+        simpleGestureListener = new SeeTalkSimpleGestureListener(returnedText);
+        scrollDetector = new GestureDetector(this, simpleGestureListener);
+
+        //returnedText.setMovementMethod(new ScrollingMovementMethod());
         returnedText.setText("*** SeeTalk Begins ***\n");
         retTextPos = returnedText.length();
 
@@ -145,6 +163,70 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         });
         // turn off the sampling start/end audio output
         mute();
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (event.getPointerCount() > 1) {
+            scaleGestureDetector.onTouchEvent(event);
+        }
+        else {
+            scrollDetector.onTouchEvent(event);
+        }
+        return true;
+    }
+
+    private class SeeTalkSimpleGestureListener extends
+            GestureDetector.SimpleOnGestureListener {
+        TextView scrollView;
+
+        public SeeTalkSimpleGestureListener(TextView sview)
+        {
+            scrollView = sview;
+        }
+
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY)
+        {
+            //scrollView.scrollBy((int) distanceX, (int) distanceY);
+            int x = 0;
+            int y = (int) distanceY;
+            scrollView.scrollBy(x, y);
+            return true;
+        }
+    }
+    private class SeeTalkOnScaleGestureListener extends
+            ScaleGestureDetector.SimpleOnScaleGestureListener {
+
+        TextView scaleView;
+
+        public SeeTalkOnScaleGestureListener(TextView tview) {
+            scaleView = tview;
+        }
+
+        @Override
+        public boolean onScale(ScaleGestureDetector detector) {
+
+            float scaleFactor = detector.getScaleFactor();
+            Log.i(LOG_TAG, "onScale " + String.valueOf(scaleFactor));
+
+            if (scaleFactor > 1.02) {
+                //appendText("increase size\n");
+                changeTextSize(true);
+            } else if (scaleFactor < 0.98) {
+                //appendText("decrease size\n");
+                changeTextSize(false);
+            }
+            return true;
+        }
+
+        @Override
+        public boolean onScaleBegin(ScaleGestureDetector detector) {
+            return true;
+        }
+
+        @Override
+        public void onScaleEnd(ScaleGestureDetector detector) {  }
     }
 
     @Override
@@ -534,8 +616,8 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
     public void onResults(Bundle results) {
 
         String text;
-        String sep = "\n----\n";
-        String tag = "\n++++\n";
+        String sep = "\n---- ";
+        String tag = "\n++++ ";
         ArrayList<String> matches = results
                 .getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
         text = matches.get(0);
