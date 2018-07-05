@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Build;
+import android.os.Environment;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
@@ -37,7 +38,13 @@ import android.view.ScaleGestureDetector;
 import android.view.ScaleGestureDetector.SimpleOnScaleGestureListener;
 
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Locale;
 
 public class VoiceRecognitionActivity extends AppCompatActivity implements
@@ -301,6 +308,44 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         appendText("\n---> Settings saved <---\n");
     }
 
+    private void saveBuffer()
+    {
+        // creatae the filename
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss", Locale.US);
+        Date now = new Date();
+        String fileName = formatter.format(now) + ".txt";
+
+        // determine our base path
+        String path =
+                Environment.getExternalStorageDirectory() + File.separator  + "seetalk";
+
+        // Create the folder.
+        File folder = new File(path);
+        if (! folder.exists()) {
+            folder.mkdirs();
+        }
+
+        // Create the file.
+        File file = new File(folder, fileName);
+        try
+        {
+            file.createNewFile();
+            FileOutputStream fOut = new FileOutputStream(file);
+            OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
+            myOutWriter.append(returnedText.getText().toString());
+            myOutWriter.close();
+
+            fOut.flush();
+            fOut.close();
+            //appendText("\n==> saved buffer to " + fileName + " in " + path + "\n");
+        }
+        catch (IOException e)
+        {
+            Log.e("Exception", "File write failed: " + e.toString());
+            //appendText("\n==> unable to save buffer to " + fileName + "\n" );
+        }
+    }
+
     private void doDialog(String title, String msg)
     {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -361,6 +406,9 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
             return true;
         case R.id.save:
             saveChanges();
+            return true;
+        case R.id.saveBuf:
+            saveBuffer();
             return true;
         case R.id.help:
             showHelp();

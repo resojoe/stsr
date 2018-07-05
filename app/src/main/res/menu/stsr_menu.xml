@@ -26,6 +26,9 @@
         android:id="@+id/save"
         android:title="@string/save" />
     <item
+        android:id="@+id/saveBuf"
+        android:title="@string/saveBuf" />
+    <item
         android:id="@+id/help"
         android:title="@string/help" />
     <item

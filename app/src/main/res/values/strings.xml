@@ -15,5 +15,6 @@
     <string name="reset">Reset</string>
     <string name="pause">Pause</string>
     <string name="listen">Listen</string>
+    <string name="saveBuf">Save Buffer</string>
 
 </resources>
