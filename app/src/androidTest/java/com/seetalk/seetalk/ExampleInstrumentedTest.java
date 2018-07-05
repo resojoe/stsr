@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("com.seetalk.seetalkrecognizer", appContext.getPackageName());
+        assertEquals("com.seetalk.seetalk", appContext.getPackageName());
     }
 }
