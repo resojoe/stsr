@@ -215,7 +215,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
         public boolean onScale(ScaleGestureDetector detector) {
 
             float scaleFactor = detector.getScaleFactor();
-            Log.i(LOG_TAG, "onScale " + String.valueOf(scaleFactor));
+            //Log.i(LOG_TAG, "onScale " + String.valueOf(scaleFactor));
 
             if (scaleFactor > 1.02) {
                 //appendText("increase size\n");
@@ -310,7 +310,7 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
 
     private void saveBuffer()
     {
-        // creatae the filename
+        // create the filename
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss", Locale.US);
         Date now = new Date();
         String fileName = formatter.format(now) + ".txt";
@@ -337,12 +337,12 @@ public class VoiceRecognitionActivity extends AppCompatActivity implements
 
             fOut.flush();
             fOut.close();
-            //appendText("\n==> saved buffer to " + fileName + " in " + path + "\n");
+            appendText("\n==> saved buffer to seetalk/" + fileName + "\n");
         }
         catch (IOException e)
         {
             Log.e("Exception", "File write failed: " + e.toString());
-            //appendText("\n==> unable to save buffer to " + fileName + "\n" );
+            appendText("\n==> unable to save buffer to " + fileName + "\n" );
         }
     }
 
